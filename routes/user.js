@@ -16,10 +16,16 @@ router.post("/user/signup", async (req, res) => {
         message: "Missing parameter",
       });
     } else {
-      const newUser = await User.findOne({ email: email });
-      if (newUser) {
+      const userEmail = await User.findOne({ email: email });
+      const userUsername = await User.findOne({ "account.username": username });
+
+      if (userEmail) {
         res.status(400).json({
           message: "This email already has an account",
+        });
+      } else if (userUsername) {
+        res.status(400).json({
+          message: "This username already has an account",
         });
       } else {
         const salt = uid2(16);
@@ -65,6 +71,7 @@ router.post("/user/login", async (req, res) => {
           message: "This account does not exist",
         });
       } else if (
+        // Comparing Hash in DB to the result of password req.fields + salt in DB
         user.hash === SHA256(password + user.salt).toString(encBase64)
       ) {
         res.status(200).json({
