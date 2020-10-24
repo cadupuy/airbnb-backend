@@ -1,4 +1,4 @@
-# Airbnb - React.js
+# Airbnb - React Native
 
 ## Running the project
 
