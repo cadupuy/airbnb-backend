@@ -1,4 +1,6 @@
 const express = require("express");
+const cloudinary = require("cloudinary").v2;
+
 const router = express.Router();
 
 const User = require("../models/User");
@@ -157,6 +159,74 @@ router.delete("/room/delete/:id", isAuthenticated, async (req, res) => {
     } else {
       res.status(400).json({
         message: "Missing parameter",
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+});
+
+router.put("/room/delete_picture/:id", isAuthenticated, async (req, res) => {
+  try {
+    if (req.params.id) {
+      const room = await Room.findById(req.params.id);
+      if (room) {
+        if (String(room.user.id) === String(req.user.id)) {
+          if (room.photos) {
+          } else {
+            res.status(400).json({
+              message: "Photo not found",
+            });
+          }
+        } else {
+          res.status(400).json({
+            message: "Unauthorized",
+          });
+        }
+      } else {
+        res.status(400).json({
+          message: "Room not found",
+        });
+      }
+    } else {
+      res.status(400).json({
+        message: "Missing id",
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+});
+
+router.put("/room/delete_picture/:id", isAuthenticated, async (req, res) => {
+  try {
+    if (req.params.id) {
+      const room = await Room.findById(req.params.id);
+      if (room) {
+        if (String(room.user.id) === String(req.user.id)) {
+          if (room.photos) {
+          } else {
+            res.status(400).json({
+              message: "Photo not found",
+            });
+          }
+        } else {
+          res.status(400).json({
+            message: "Unauthorized",
+          });
+        }
+      } else {
+        res.status(400).json({
+          message: "Room not found",
+        });
+      }
+    } else {
+      res.status(400).json({
+        message: "Missing id",
       });
     }
   } catch (error) {
