@@ -168,16 +168,36 @@ router.delete("/room/delete/:id", isAuthenticated, async (req, res) => {
   }
 });
 
-router.put("/room/delete_picture/:id", isAuthenticated, async (req, res) => {
+router.put("/room/upload_picture/:id", isAuthenticated, async (req, res) => {
   try {
     if (req.params.id) {
       const room = await Room.findById(req.params.id);
       if (room) {
-        if (String(room.user.id) === String(req.user.id)) {
-          if (room.photos) {
+        if (String(room.user) === String(req.user.id)) {
+          if (req.files.photo) {
+            if (room.photos.length < 5) {
+              let pictureRoom = {};
+              const pictureToUpload = req.files.photo.path;
+              const pictureCloudinary = await cloudinary.uploader.upload(
+                pictureToUpload,
+                {
+                  folder: "/airbnb/" + req.params.id,
+                }
+              );
+              pictureRoom.url = pictureCloudinary.secure_url;
+              pictureRoom.picture_id = pictureCloudinary.public_id;
+              room.photos.push(pictureRoom);
+
+              await room.save();
+              res.status(200).json(room);
+            } else {
+              res.status(400).json({
+                message: "Can't add more than 5 pictures",
+              });
+            }
           } else {
             res.status(400).json({
-              message: "Photo not found",
+              message: "Missing photo",
             });
           }
         } else {
@@ -192,7 +212,7 @@ router.put("/room/delete_picture/:id", isAuthenticated, async (req, res) => {
       }
     } else {
       res.status(400).json({
-        message: "Missing id",
+        message: "Missing room id",
       });
     }
   } catch (error) {
@@ -206,12 +226,29 @@ router.put("/room/delete_picture/:id", isAuthenticated, async (req, res) => {
   try {
     if (req.params.id) {
       const room = await Room.findById(req.params.id);
-      if (room) {
-        if (String(room.user.id) === String(req.user.id)) {
-          if (room.photos) {
-          } else {
+      if (!room) {
+        res.status(400).json({
+          message: "Room not found",
+        });
+      } else {
+        if (String(room.user) === String(req.user.id)) {
+          if (!req.fields.picture_id) {
             res.status(400).json({
-              message: "Photo not found",
+              message: "Missing parameter",
+            });
+          } else {
+            for (let i = 0; i < room.photos.length; i++) {
+              if (room.photos[i].picture_id === req.fields.picture_id) {
+                await cloudinary.uploader.destroy(room.photos[i].picture_id);
+                room.photos.splice(i, 1);
+                await room.save();
+                return res.status(200).json({
+                  message: "Picture deleted",
+                });
+              }
+            }
+            return res.status(400).json({
+              message: "Picture not found",
             });
           }
         } else {
@@ -219,14 +256,10 @@ router.put("/room/delete_picture/:id", isAuthenticated, async (req, res) => {
             message: "Unauthorized",
           });
         }
-      } else {
-        res.status(400).json({
-          message: "Room not found",
-        });
       }
     } else {
       res.status(400).json({
-        message: "Missing id",
+        message: "Missing Room Id",
       });
     }
   } catch (error) {
