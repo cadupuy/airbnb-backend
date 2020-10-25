@@ -95,6 +95,62 @@ router.post("/user/login", async (req, res) => {
   }
 });
 
+router.get("/users/:id", async (req, res) => {
+  try {
+    if (req.params.id) {
+      const user = await User.findById(req.params.id);
+      if (user) {
+        res.status(400).json({
+          _id: user._id,
+          account: user.account,
+          rooms: user.rooms,
+        });
+      } else {
+        res.status(400).json({
+          message: "User not found",
+        });
+      }
+    } else {
+      res.status(400).json({
+        message: "Missing user Id",
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+});
+
+router.get("/user/rooms/:id", async (req, res) => {
+  try {
+    if (req.params.id) {
+      const user = await User.findById(req.params.id).populate("rooms");
+      if (user) {
+        if (user.rooms.length > 0) {
+          res.status(400).json(user.rooms);
+        } else {
+          res.status(400).json({
+            message: "This user has no room",
+          });
+        }
+      } else {
+        res.status(400).json({
+          message: "User not found",
+        });
+      }
+    } else {
+      res.status(400).json({
+        message: "Missing user Id",
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+});
+
 router.put("/user/upload_picture/:id", isAuthenticated, async (req, res) => {
   try {
     if (req.params.id) {
