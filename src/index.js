@@ -4,10 +4,12 @@ const mongoose = require("mongoose");
 const formidable = require("express-formidable");
 const cors = require("cors");
 const cloudinary = require("cloudinary").v2;
+const helmet = require("helmet");
 
 const app = express();
 app.use(formidable());
 app.use(cors());
+app.use(helmet());
 
 // Cloudinary logs
 cloudinary.config({
@@ -22,9 +24,9 @@ mongoose.connect(process.env.MONGODB_URI, {
   useCreateIndex: true,
 });
 
-const userRoutes = require("./routes/user");
+const userRoutes = require("../routes/user");
 app.use(userRoutes);
-const roomRoutes = require("./routes/room");
+const roomRoutes = require("../routes/room");
 app.use(roomRoutes);
 
 app.all("*", (req, res) => {
@@ -33,6 +35,6 @@ app.all("*", (req, res) => {
   });
 });
 
-app.listen("3000", (req, res) => {
+app.listen(process.env.PORT, (req, res) => {
   console.log("Server started");
 });
