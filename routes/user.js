@@ -19,11 +19,18 @@ const isAuthenticated = require("../middlewares/isAuthenticated");
 
 router.post("/user/signup", async (req, res) => {
   try {
-    const { password, username, email, description, name } = req.fields;
+    const {
+      password,
+      username,
+      email,
+      description,
+      name,
+      confirmPassword,
+    } = req.fields;
 
-    if (!password || !username || !email || !description || !name) {
+    if (!password || !username || !email || !description || !confirmPassword) {
       res.status(400).json({
-        message: "Missing parameter",
+        message: "Paramètre manquant",
       });
     } else {
       const userEmail = await User.findOne({ email: email });
@@ -31,11 +38,15 @@ router.post("/user/signup", async (req, res) => {
 
       if (userEmail) {
         res.status(400).json({
-          message: "This email already has an account",
+          message: "Cette adresse email est déjà utilisée",
         });
       } else if (userUsername) {
         res.status(400).json({
-          message: "This username already has an account",
+          message: "Ce nom d'utilisateur est déjà utilisé",
+        });
+      } else if (password !== confirmPassword) {
+        res.status(400).json({
+          message: "Les deux mots de passe doivent être identiques",
         });
       } else {
         const salt = uid2(16);
@@ -75,12 +86,12 @@ router.post("/user/login", async (req, res) => {
 
     if (!password || !email) {
       res.status(400).json({
-        message: "Missing parameter",
+        message: "Paramètre manquant",
       });
     } else {
       if (!user) {
         res.status(400).json({
-          message: "This account does not exist",
+          message: "Ce compte n'existe pas",
         });
       } else if (
         // Comparing Hash in DB to the result of password req.fields + salt in DB
@@ -94,7 +105,7 @@ router.post("/user/login", async (req, res) => {
         });
       } else {
         res.status(401).json({
-          message: "Unauthorized",
+          message: "Nom d'utilisateur ou mot de passe erroné",
         });
       }
     }
